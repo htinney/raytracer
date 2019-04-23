@@ -1,25 +1,58 @@
 import os
 import random
-import scenedescription, raytracer
+from scenedescription import *
+from linearalgebra import *
+import ray
+ray.init()
 
-class Raytracer():
-    def __init__(self, res_x, res_y, camera, bg_color, scenefile="example.json", outfile="example.ppm"):
+class Raycast():
+    def __init__(self, origin=Vector3(), direction=Vector3()):
+        self.origin = origin
+        self.direction = direction
+
+class Ray_Raytracer():
+    def __init__(self, res_x=300, res_y=600, camera=Camera(), bg_color=Vector3(), scenefile="example.json", outfile="example.ppm"):
         self.res_x = res_x
         self.res_y = res_y
         self.aspect = float(res_x) / float(res_y)
-        self.camera = camera
         self.bg_color = bg_color
         self.scene_description = SceneDescription()
         self.scene_description.import_from_file(scenefile)
         self.outfile = outfile
         self.pixels = [[Vector3() for i in range(res_x)] for j in range(res_y)]
 
+    @ray.remote
+    def gradient(self, i, j, x_color1, x_color2, y_color1, y_color2):
+        percent_x = float(i) / float(self.res_x)
+        percent_y = float(i) / float(self.res_y)
+        x_color = percent_x * x_color1 + (1 - percent_x) * x_color2
+        y_color = percent_y * y_color1 + (1 - percent_y) * y_color2
+        color = 0.5 * x_color + 0.5 * y_color
+        self.pixels[i][j] = color
+        return color
+
+    def fill_gradient(self,
+                     x_color1=Vector3(x=1.0, y=0.0, z=0.0),
+                     x_color2=Vector3(x=0.5, y=1.0, z=0.0),
+                     y_color1=Vector3(x=0.0, y=1.0, z=0.0),
+                     y_color2=Vector3(x=0.0, y=0.5, z=1.0)):
+        fill_tasks = []
+        for i in self.res_x:
+            for j in self.res_y:
+                fill_tasks += self.gradient(i,
+                                            j,
+                                            x_color1,
+                                            x_color2,
+                                            y_color1,
+                                            y_color2)
+        ray.get(fill_tasks)
+
     def trace(self, samples=1):
         self.octree = self.scene_description.flatten_to_octree(self.camera)
         for i in samples:
             for x in range(self.res_x):
                 for y in range(self.res_y):
-                    print "({0}, {1}) {2} samples".format(x, y, i)
+                    print("({0}, {1}) {2} samples".format(x, y, i))
                     self.pixels[x][y] = (self.pixels[x][y] + self.sample(x, y)) / samples
 
 #http://blog.johnnovak.net/2016/04/30/the-nim-raytracer-project-part-2-the-basics/
@@ -31,9 +64,9 @@ class Raytracer():
         f = math.tan(self.camera.fov / 2)
         screen_x = (2 * ndc_x - self.aspect) * f
         screen_y = -(2 * ndc_y - 1) * f
-        direction = (Vector3(x=screen_x, y=screen_y, -1.0)).normalized()
+        direction = (Vector3(x=screen_x, y=screen_y, z=-1.0)).normalized()
         D = self.camera.transform * direction
-        ray = Ray(origin=camera.pos, direction=d)
+        ray = Raycast(origin=camera.pos, direction=d)
         point, object = self.octree.intersect(ray)
 
         color = self.bg_color
@@ -43,7 +76,7 @@ class Raytracer():
             count = 0
             color = Vector3() * 0
             for light in self.scene_description.lights:
-                L = Ray(origin=point, direction=(light.pos - point).normalized)
+                L = Raycast(origin=point, direction=(light.pos - point).normalized)
                 if L ** N < 0:
                     continue
                 else:
@@ -65,4 +98,4 @@ class Raytracer():
                         pixel_ppm = pixel * 255.99
                         f.write("{0}\n".format(pixel_ppm))
             else:
-                print "Functionality only for PPM files."
+                print("Functionality only for PPM files.")

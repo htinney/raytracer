@@ -1,22 +1,17 @@
+import math
+
 class Vector3():
     def __init__(self, x=1.0, y=1.0, z=1.0):
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x , self.y, self.z = x, y, z
 
-    def __str__(self):
-        return "{0} {1} {2}".format(self.x, self.y, self.z)
-
-    def mangitude(self):
+    def magnitude(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
     def normalized(self):
-        return self / self.magnitude
+        return self / self.magnitude()
 
-    def rayTo(self, other):
-        return Ray(origin = self.origin,
-                   direction=self,
-                   (other - self).normalize())
+    def __str__(self):
+        return "{0} {1} {2}".format(self.x, self.y, self.z)
 
     # USES % FOR CROSS PRODUCT
     def __mod__(self, other):
@@ -29,7 +24,7 @@ class Vector3():
         return self.x * other.x + self.y * other.y + self.z * other.z
 
     def __add__(self, other):
-        if instanceof(other, Vector3):
+        if isinstance(other, Vector3):
             return Vector3(x=self.x + other.x,
                            y=self.y + other.y,
                            z=self.z + other.z)
@@ -39,7 +34,7 @@ class Vector3():
                            z=self.z + other)
 
     def __sub__(self, other):
-        if instanceof(other, Vector3):
+        if isinstance(other, Vector3):
             return Vector3(x=self.x - other.x,
                            y=self.y - other.y,
                            z=self.z - other.z)
@@ -48,8 +43,9 @@ class Vector3():
                            y=self.y - other,
                            z=self.z - other)
 
+
     def __mul__(self, other):
-        if instanceof(other, Vector3):
+        if isinstance(other, Vector3):
             return Vector3(x=self.x * other.x,
                            y=self.y * other.y,
                            z=self.z * other.z)
@@ -58,13 +54,22 @@ class Vector3():
                            y=self.y * other,
                            z=self.z * other)
 
-    def pointwise_mul(self, other):
-
+    def __truediv__(self, scalar):
+        return Vector3(x=self.x / scalar,
+                       y=self.y / scalar,
+                       z=self.z / scalar)
 
     def __div__(self, scalar):
         return Vector3(x=self.x / scalar,
                        y=self.y / scalar,
                        z=self.z / scalar)
+    __rmod__ = __mod__
+    __rpow__ = __pow__
+    __radd__ = __add__
+    __rsub__ = __sub__
+    __rmul__ = __mul__
+    __rtruediv__ = __truediv__
+    __rdiv__ = __div__
 
 class Matrix3():
     def __init__(self,
@@ -85,13 +90,13 @@ class Matrix3():
                 self.m[(3 * i) + 2] = col.z
 
     def row(self, i):
-        return Vector3(m[i], m[i + 1], m[i + 2])
+        return Vector3(self.m[i], self.m[i + 1], self.m[i + 2])
 
     def col(self, i):
-        return Vector3(m[(3 * i)], m[(3 * i) + 1], m[(3 * i) + 2])
+        return Vector3(self.m[(3 * i)], self.m[(3 * i) + 1], self.m[(3 * i) + 2])
 
     def __mul__(self, other):
-        if instanceof(other, Matrix3):
+        if isinstance(other, Matrix3):
             m = [
                 self.row(0) ** other.col(0),
                 self.row(0) ** other.col(1),
@@ -105,7 +110,7 @@ class Matrix3():
             ]
             return Matrix3(m=m)
 
-        elif instanceof(other, Vector3):
+        elif isinstance(other, Vector3):
             x = self.row(0) ** other
             y = self.row(1) ** other
             z = self.row(2) ** other

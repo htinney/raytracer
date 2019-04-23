@@ -1,5 +1,6 @@
 import math
-import linearalgebra
+import json, jsonpickle
+from linearalgebra import *
 
 # An axis-aligned boudning box
 class BBOX():
@@ -83,12 +84,13 @@ class CustomOBJ():
         self.filepath = filepath
 
 class Octree():
-    def __init__(self, center=Vector3() * 0, size, objects=[]):
+    def __init__(self, center=Vector3() * 0, size=1.0, objects=[]):
         children = []
         for object in objects:
             object_bbox = object.center
 
     def intersect(self, ray):
+        pass
 
 class Camera():
     def __init__(self,
@@ -101,9 +103,9 @@ class Camera():
         self.up = up
         self.right = (forward % up).normalized()
         self.fov = fov
-        self.transform = Matrix3(cols=[self.camera.right,
-                                         self.camera.up,
-                                         self.camera.forward])
+        self.transform = Matrix3(cols=[self.right,
+                                         self.up,
+                                         self.forward])
 
 class PointLight():
     def __init__(self, pos=Vector3() * 0, color=Vector3(), intensity=1.0):
@@ -115,20 +117,21 @@ class PointLight():
         return False
 
 class SceneDescription():
-    def __init__(self, lights=[], spheres=[], cubes=[], planes=[], customOBJs[]):
-        self.lights = []
-        self.spheres = []
-        self.cubes = []
-        self.planes = []
-        self.customOBJs[]
+    def __init__(self, lights=[], spheres=[], cubes=[], planes=[], customOBJs=[]):
+        self.lights = lights
+        self.spheres = spheres
+        self.cubes = cubes
+        self.planes = planes
+        self.customOBJs = customOBJs
 
     def import_from_file(self, file):
         with open(file, 'r') as f:
-            pass
+            updated = jsonpickle.decode(json.load(f))
+            self.__dict__.update(updated.__dict__)
 
     def export_to_file(self, file):
         with open(file, 'w') as f:
-            pass
+            f.write(json.dumps(jsonpickle.encode(self)))
 
     def flatten_to_octree(self):
         return Octree()
