@@ -117,12 +117,9 @@ class PointLight():
         return False
 
 class SceneDescription():
-    def __init__(self, lights=[], spheres=[], cubes=[], planes=[], customOBJs=[]):
+    def __init__(self, lights=[], objects=[]):
         self.lights = lights
-        self.spheres = spheres
-        self.cubes = cubes
-        self.planes = planes
-        self.customOBJs = customOBJs
+        self.objects = objects
 
     def import_from_file(self, file):
         with open(file, 'r') as f:

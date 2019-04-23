@@ -1,6 +1,10 @@
 # Recommended Python .gitignore
 # https://github.com/kennethreitz/samplemod/blob/master/.gitignore
 
+# Ignore PPMs and scene descriptions
+*.scenedsc
+*.ppm
+
 # BYU-specific ignores
 production/
 bin/

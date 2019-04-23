@@ -10,9 +10,6 @@ class Vector3():
     def normalized(self):
         return self / self.magnitude()
 
-    def __str__(self):
-        return "{0} {1} {2}".format(self.x, self.y, self.z)
-
     # USES % FOR CROSS PRODUCT
     def __mod__(self, other):
         return Vector3(x=(self.y * other.z - self.z * other.y),
