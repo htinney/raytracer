@@ -4,7 +4,7 @@ from scenedescription import *
 from linearalgebra import *
 import ray
 ray.shutdown()
-ray.init(num_gpus=1)
+ray.init(num_cpus=int(os.environ["NUMCORES"]))
 
 import time
 
@@ -14,11 +14,11 @@ def generate_example():
     main_light.pos += Vector3(0.0, 1.0, 0.0)
     sd.lights.append(main_light)
     sd.objects.append(Sphere())
-    sd.export_to_file("example.json")
+    sd.export_to_file("example.scenedsc")
 
-def test():
+def test(cores=8, chunks=8):
     rt = Raytracer()
-    for i in range(1,100):
+    for i in range(1, chunks + 1):
         time1 = time.time()
         rt.gradient_fill(partitions=i)
         time2 = time.time()
@@ -66,8 +66,8 @@ class GradientFiller():
 
 class Raytracer():
     def __init__(self,
-                 res_x=500,#300,
-                 res_y=500,#600,
+                 res_x=300,#300,
+                 res_y=600,#600,
                  camera=Camera(),
                  bg_color=Vector3(),
                  scenefile="example.scenedsc",
@@ -101,11 +101,11 @@ class Raytracer():
 
         x_partition_size = int(self.res_x / partitions)
         y_partition_size = int(self.res_y / partitions)
-        for i in range(partitions):
+        for i in range(partitions + 1):
             x1 = x_partition_size * i
             x2 = x1 + x_partition_size
             x2 = x2 if x2 <= self.res_x else self.res_x
-            for j in range(partitions):
+            for j in range(partitions + 1):
                 y1 = y_partition_size * j
                 y2 = y1 + y_partition_size
                 y2 = y2 if y2 <= self.res_y else self.res_y
